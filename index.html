@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pic to Puzz</title>
     <style>
         body {
@@ -13,8 +13,10 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
-            touch-action: none;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         #intro-page {
@@ -42,13 +44,12 @@
             height: auto;
             margin: 0 auto 15px;
             border-radius: 50%;
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.7);
             animation: glow 3s ease-in-out infinite alternate;
         }
 
         @keyframes glow {
-            0% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
-            100% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.9), 0 0 50px #00ffcc; }
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.02); opacity: 1; }
         }
 
         #intro-page h1 {
@@ -75,7 +76,6 @@
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 0 15px #ff00cc, 0 0 30px #00ffcc;
             animation: pulse 1.5s infinite;
             transition: transform 0.3s;
         }
@@ -85,9 +85,9 @@
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 15px #ff00cc, 0 0 30px #00ffcc; }
-            50% { box-shadow: 0 0 25px #ff00cc, 0 0 50px #00ffcc; }
-            100% { box-shadow: 0 0 15px #ff00cc, 0 0 30px #00ffcc; }
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
         }
 
         #game-page {
@@ -97,8 +97,13 @@
             width: 100%;
             min-height: 100vh;
             padding: 10px;
+            padding-top: calc(10px + env(safe-area-inset-top));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
             box-sizing: border-box;
             background: rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            position: relative;
+            touch-action: auto;
         }
 
         #reference-container {
@@ -114,12 +119,33 @@
             border: 2px solid #00ffcc;
             border-radius: 5px;
             box-shadow: 0 0 10px #00ffcc;
+            display: block;
+        }
+
+        #mode-controls {
+            position: absolute;
+            top: calc(20px + env(safe-area-inset-top));
+            right: calc(5px + env(safe-area-inset-right));
+            z-index: 20;
+            touch-action: auto;
         }
 
         #controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin: 10px 0;
+            justify-content: center;
+            width: 100%;
+            max-width: clamp(300px, 90vw, 400px);
+        }
+
+        #clear-container {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            width: 100%;
+            max-width: clamp(300px, 90vw, 400px);
         }
 
         #upload-input, #clear-btn, #reshuffle-btn {
@@ -149,6 +175,83 @@
             transform: scale(1.05);
         }
 
+        .mode-selector {
+            position: relative;
+            display: inline-block;
+        }
+
+        #mode-btn {
+            padding: 5px 10px;
+            font-size: clamp(0.6em, 2vw, 0.9em);
+            width: 90px;
+            background: #00cccc;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 0 10px rgba(0, 204, 204, 0.7);
+        }
+
+        #mode-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 204, 204, 1);
+        }
+
+        .mode-dropdown {
+            display: none;
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            z-index: 10;
+            top: 100%;
+            left: auto;
+            right: 0;
+            transform: none;
+            width: 90px;
+            min-width: 90px;
+            text-align: center;
+            max-height: 120px;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        @supports not (backdrop-filter: blur(10px)) {
+            .mode-dropdown {
+                background: rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .mode-dropdown.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .difficulty-btn {
+            display: block;
+            padding: 8px;
+            font-size: clamp(0.6em, 2vw, 0.9em);
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .difficulty-btn.active {
+            color: #ff00cc;
+            background: rgba(0, 255, 255, 0.3);
+            text-shadow: 0 0 5px #ff00cc;
+        }
+
         #puzzle-container {
             position: relative;
             width: clamp(280px, 85vw, 400px);
@@ -158,6 +261,7 @@
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
             margin: 10px auto;
+            touch-action: none;
         }
 
         .puzzle-piece {
@@ -167,17 +271,64 @@
             touch-action: none;
             border: 1px solid rgba(0, 255, 255, 0.5);
             border-radius: 5px;
-            /* Removed transition property to prevent lag during dragging */
+        }
+
+        #donation-container {
+            margin: 15px 0;
+            text-align: center;
+            color: #e0e0e0;
+            font-size: clamp(0.8em, 2.5vw, 1em);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        #donation-qr {
+            width: clamp(80px, 20vw, 120px);
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            margin-top: 5px;
         }
 
         .footer {
-            position: fixed;
-            bottom: 5px;
+            position: relative;
+            margin-top: 20px;
+            padding-bottom: 30px;
             font-size: clamp(0.7em, 2vw, 0.9em);
             color: #e0e0e0;
             text-align: center;
             width: 100%;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        @media screen and (max-width: 600px) {
+            #game-page {
+                padding: 5px;
+                padding-top: calc(5px + env(safe-area-inset-top));
+                padding-bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+
+            #controls, #clear-container {
+                gap: 8px;
+            }
+
+            #mode-controls {
+                top: calc(20px + env(safe-area-inset-top));
+                right: calc(5px + env(safe-area-inset-right));
+            }
+
+            #puzzle-container {
+                width: clamp(250px, 85vw, 350px);
+                height: clamp(250px, 85vw, 350px);
+            }
+
+            #donation-container {
+                margin: 10px 0;
+            }
+
+            .footer {
+                margin-top: 15px;
+                padding-bottom: 40px;
+            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -194,12 +345,28 @@
         <div id="reference-container">
             <img id="reference" alt="Reference Image">
         </div>
+        <div id="mode-controls">
+            <div class="mode-selector">
+                <button id="mode-btn">Mode: Medium</button>
+                <div class="mode-dropdown" id="mode-dropdown">
+                    <button class="difficulty-btn" data-level="easy">Easy</button>
+                    <button class="difficulty-btn active" data-level="medium">Medium</button>
+                    <button class="difficulty-btn" data-level="hard">Hard</button>
+                </div>
+            </div>
+        </div>
+        <div id="clear-container">
+            <button id="clear-btn">Clear</button>
+        </div>
         <div id="controls">
             <input type="file" id="upload-input" accept="image/*,video/*,.gif">
-            <button id="clear-btn">Clear</button>
             <button id="reshuffle-btn">Reshuffle</button>
         </div>
         <div id="puzzle-container"></div>
+        <div id="donation-container">
+            <p>Enjoying the cosmic vibes? Scan below to fuel this adventure with a donation!</p>
+            <img id="donation-qr" src="donate.jpg" alt="Donate QR Code">
+        </div>
         <p class="footer">Designed by Kofi Fosu | <a href="mailto:cosmoscoderr@gmail.com" style="color: #00ffcc;">cosmoscoderr@gmail.com</a></p>
     </div>
 
@@ -207,12 +374,23 @@
         const introPage = document.getElementById('intro-page');
         const gamePage = document.getElementById('game-page');
         const startBtn = document.getElementById('start-btn');
-        const uploadInput = document.getElementById('upload-input');
+        let uploadInput = document.getElementById('upload-input'); // Update to let for reassignment
         const clearBtn = document.getElementById('clear-btn');
         const reshuffleBtn = document.getElementById('reshuffle-btn');
         const puzzleContainer = document.getElementById('puzzle-container');
         const reference = document.getElementById('reference');
+        const modeBtn = document.getElementById('mode-btn');
+        const modeDropdown = document.getElementById('mode-dropdown');
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
         let currentMediaUrl = null;
+        let currentDifficulty = 'medium';
+        let isDropdownToggling = false;
+
+        const difficultySettings = {
+            easy: { rows: 3, cols: 3, snapThreshold: 25 },
+            medium: { rows: 4, cols: 4, snapThreshold: 20 },
+            hard: { rows: 5, cols: 5, snapThreshold: 15 }
+        };
 
         startBtn.addEventListener('click', () => {
             introPage.style.display = 'none';
@@ -223,12 +401,44 @@
         clearBtn.addEventListener('click', clearPuzzle);
         reshuffleBtn.addEventListener('click', reshufflePuzzle);
 
+        modeBtn.addEventListener('click', () => {
+            if (isDropdownToggling) return;
+            isDropdownToggling = true;
+            modeDropdown.classList.toggle('show');
+            setTimeout(() => {
+                isDropdownToggling = false;
+            }, 200);
+        });
+
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficultyButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentDifficulty = btn.dataset.level;
+                modeBtn.textContent = `Mode: ${btn.textContent}`;
+                modeDropdown.classList.remove('show');
+                if (currentMediaUrl) {
+                    createPuzzle(currentMediaUrl);
+                }
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!modeBtn.contains(e.target) && !modeDropdown.contains(e.target)) {
+                modeDropdown.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.closest('#puzzle-container')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
         function handleFileUpload(e) {
             const file = e.target.files[0];
             if (file) {
-                if (currentMediaUrl) {
-                    URL.revokeObjectURL(currentMediaUrl);
-                }
+                clearPuzzle(); // Clear existing puzzle before uploading new image
                 currentMediaUrl = URL.createObjectURL(file);
                 reference.src = currentMediaUrl;
                 createPuzzle(currentMediaUrl);
@@ -236,23 +446,41 @@
         }
 
         function clearPuzzle() {
-            puzzleContainer.innerHTML = '';
+            // Clear puzzle pieces immediately
+            while (puzzleContainer.firstChild) {
+                puzzleContainer.removeChild(puzzleContainer.firstChild);
+            }
+
+            // Reset reference image
             reference.src = '';
             reference.removeAttribute('src');
+            reference.style.display = 'none';
+            setTimeout(() => {
+                reference.style.display = 'block';
+            }, 0);
+
+            // Reset file input
             uploadInput.value = '';
+            const newInput = uploadInput.cloneNode(true);
+            uploadInput.replaceWith(newInput);
+            uploadInput = newInput;
+            uploadInput.addEventListener('change', handleFileUpload);
+
+            // Release media URL and reset state
             if (currentMediaUrl) {
                 URL.revokeObjectURL(currentMediaUrl);
                 currentMediaUrl = null;
             }
+
+            // Reset puzzle container styles
             puzzleContainer.style.backgroundImage = 'none';
         }
 
         function createPuzzle(mediaUrl) {
             puzzleContainer.innerHTML = '';
             const containerSize = Math.min(puzzleContainer.offsetWidth, puzzleContainer.offsetHeight);
-            const pieceSize = containerSize / 4;
-            const rows = 4;
-            const cols = 4;
+            const { rows, cols } = difficultySettings[currentDifficulty];
+            const pieceSize = containerSize / cols;
 
             const pieces = [];
             for (let row = 0; row < rows; row++) {
@@ -268,12 +496,12 @@
                     piece.dataset.col = col;
                     piece.dataset.correctX = col * pieceSize;
                     piece.dataset.correctY = row * pieceSize;
-                    
+
                     pieces.push(piece);
                     puzzleContainer.appendChild(piece);
                 }
             }
-            
+
             shufflePieces(pieces, pieceSize);
             pieces.forEach(piece => makeDraggable(piece, pieceSize));
         }
@@ -296,17 +524,15 @@
 
         function reshufflePuzzle() {
             if (!currentMediaUrl) return;
-            
+
             const pieces = Array.from(puzzleContainer.querySelectorAll('.puzzle-piece'));
-            const pieceSize = parseFloat(pieces[0]?.style.width) || puzzleContainer.offsetWidth / 4;
-            
-            pieces.forEach(piece => {
-                piece.replaceWith(piece.cloneNode(true));
-            });
-            
-            const newPieces = puzzleContainer.querySelectorAll('.puzzle-piece');
-            shufflePieces(Array.from(newPieces), pieceSize);
-            newPieces.forEach(piece => makeDraggable(piece, pieceSize));
+            if (pieces.length === 0) return;
+
+            while (puzzleContainer.firstChild) {
+                puzzleContainer.removeChild(puzzleContainer.firstChild);
+            }
+
+            createPuzzle(currentMediaUrl);
         }
 
         function makeDraggable(piece, pieceSize) {
@@ -314,13 +540,14 @@
             let startX, startY;
             let lastX, lastY;
             let rafId = null;
+            let lastUpdate = 0;
 
             piece.addEventListener('mousedown', startDrag);
             piece.addEventListener('touchstart', startDrag, { passive: false });
 
             function startDrag(e) {
                 if (piece.dataset.locked === 'true') return;
-                
+
                 e.preventDefault();
                 isDragging = true;
                 const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
@@ -340,21 +567,28 @@
             function drag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
-                
+
                 const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                 const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                
-                // Cancel previous animation frame to prevent lag
+                const now = performance.now();
+
+                if (now - lastUpdate < 16) {
+                    if (!rafId) {
+                        rafId = requestAnimationFrame(() => drag(e));
+                    }
+                    return;
+                }
+
+                lastUpdate = now;
                 if (rafId) cancelAnimationFrame(rafId);
 
                 rafId = requestAnimationFrame(() => {
                     const newX = clientX - startX;
                     const newY = clientY - startY;
-                    
-                    // Smooth movement by directly updating position
+
                     piece.style.left = `${newX}px`;
                     piece.style.top = `${newY}px`;
-                    
+
                     lastX = clientX;
                     lastY = clientY;
                     rafId = null;
@@ -371,21 +605,21 @@
                 const targetY = parseFloat(piece.dataset.correctY);
                 const currentX = parseFloat(piece.style.left);
                 const currentY = parseFloat(piece.style.top);
-                const snapThreshold = 20;
+                const snapThreshold = difficultySettings[currentDifficulty].snapThreshold;
 
                 if (Math.abs(currentX - targetX) < snapThreshold && 
                     Math.abs(currentY - targetY) < snapThreshold) {
-                    // Add a subtle transition only for snapping
                     piece.style.transition = 'all 0.1s ease';
                     piece.style.left = `${targetX}px`;
                     piece.style.top = `${targetY}px`;
                     piece.style.cursor = 'default';
                     piece.dataset.locked = 'true';
-                    
-                    // Remove transition after snap to prevent dragging interference
+
                     setTimeout(() => {
                         piece.style.transition = '';
                     }, 100);
+
+                    checkWinCondition();
                 }
 
                 document.removeEventListener('mousemove', drag);
@@ -395,9 +629,20 @@
             }
         }
 
+        function checkWinCondition() {
+            const pieces = Array.from(puzzleContainer.querySelectorAll('.puzzle-piece'));
+            const allLocked = pieces.every(piece => piece.dataset.locked === 'true');
+            if (allLocked) {
+                setTimeout(() => {
+                    alert('Congratulations! You’ve conquered the cosmic puzzle!');
+                }, 200);
+            }
+        }
+
         window.addEventListener('unload', () => {
             if (currentMediaUrl) {
                 URL.revokeObjectURL(currentMediaUrl);
+                currentMediaUrl = null;
             }
         });
     </script>
